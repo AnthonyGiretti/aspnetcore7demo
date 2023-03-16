@@ -33,7 +33,7 @@ builder.Services.AddRateLimiter(options =>
             options.PermitLimit = 1;
             options.Window = TimeSpan.FromSeconds(10);
             options.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
-            options.QueueLimit = 1;
+            //options.QueueLimit = 1; //--> bug here, not working
         });
     options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
     options.OnRejected = async (context, token) =>
