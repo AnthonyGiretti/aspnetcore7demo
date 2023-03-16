@@ -9,6 +9,11 @@ using WebAppDotnet7.MinimalEndpoints;
 using WebAppDotnet7.Groups;
 
 var builder = WebApplication.CreateBuilder(args);
+var logger = LoggerFactory.Create(config =>
+{
+    config.AddConsole();
+    config.AddSeq();
+}).CreateLogger("Program");
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
@@ -95,13 +100,13 @@ app.MapGet("/UnitTestable", (IHttpContextAccessor httpContextAccessor) => UnitTe
 
 // Demo group endpoints
 app.MapGroup("/v1")
-    .V1Api()
+    .GroupOne()
     .RequireCors("CorsPolicy1")
     .AllowAnonymous()
     .WithTags("v1");
 
 app.MapGroup("/v2")
-    .V2Api()
+    .GroupTwo()
     .RequireCors("CorsPolicy2")
     .RequireAuthorization()
     .RequireRateLimiting("LimitPolicy")
@@ -113,5 +118,24 @@ var country = baseUri.MapGroup("Country/{country}");
 var language = country.MapGroup("Language/{language}");
 language.MapGet("", (string country, string language) => $"I Live in {country} speak {language}!");
 country.MapGet("Timezone/{timezone}", (string country, string timezone) => $"I Live in {country} the timezone is {timezone}!");
+
+app.MapGet("/logging", () =>
+{
+    using (logger.BeginScope("Start processing for Id: {id}", 10))
+    {
+        using (logger.BeginScope("Beginning action 1"))
+        {
+            logger.LogInformation("Action 1 done");
+            logger.LogInformation("SubAction 1 done, data retrieved {data}", new { Result = "Ok" });
+        }
+
+        using (logger.BeginScope("Beginning action 2"))
+        {
+            logger.LogInformation("Action 2 done, with status: {Status}", new { Status = "Processed", Duration = TimeSpan.FromSeconds(10) });
+        }
+    }
+
+    return Results.Ok();
+});
 
 app.Run();

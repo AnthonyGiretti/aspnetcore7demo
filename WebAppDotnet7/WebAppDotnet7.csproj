@@ -9,6 +9,7 @@
   <ItemGroup>
 	  <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="7.0.0" />
 	  <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="7.0.0" />
+	  <PackageReference Include="Seq.Extensions.Logging" Version="6.1.0" />
 	  <PackageReference Include="Swashbuckle.AspNetCore" Version="6.4.0" />
 	  <PackageReference Include="SixLabors.ImageSharp" Version="2.1.3" />
   </ItemGroup>
