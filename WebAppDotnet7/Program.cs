@@ -3,17 +3,12 @@ using Microsoft.AspNetCore.RateLimiting;
 using WebAppDotnet7;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Primitives;
-using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Formats.Jpeg;
 using WebAppDotnet7.MinimalEndpoints;
 using WebAppDotnet7.Groups;
+using WebAppDotnet7.EndpointFilters;
 
 var builder = WebApplication.CreateBuilder(args);
-var logger = LoggerFactory.Create(config =>
-{
-    config.AddConsole();
-    config.AddSeq();
-}).CreateLogger("Program");
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
@@ -57,11 +52,12 @@ app.MapGet("/Country/{country}/Language/{language}", [Log("country", nameof(coun
     return op;
 }).AddEndpointFilter(async (efiContext, next) => // Demo Filters
 {
-    app.Logger.LogDebug("Before filter");
+    var logger = efiContext.HttpContext.RequestServices.GetRequiredService<ILoggerFactory>().CreateLogger<Program>();
+    logger.LogDebug("Before filter");
     var result = await next(efiContext);
-    app.Logger.LogDebug("After filter");
+    logger.LogDebug("After filter");
     return result;
-});
+}).AddEndpointFilter<MyEndpointFilter>(); // Demo custom filters
 
 // Demo rate limiter
 app.MapGet("/Testlimit", [EnableRateLimiting("LimitPolicy")] () => "I'm reachable!");
@@ -118,24 +114,5 @@ var country = baseUri.MapGroup("Country/{country}");
 var language = country.MapGroup("Language/{language}");
 language.MapGet("", (string country, string language) => $"I Live in {country} speak {language}!");
 country.MapGet("Timezone/{timezone}", (string country, string timezone) => $"I Live in {country} the timezone is {timezone}!");
-
-app.MapGet("/logging", () =>
-{
-    using (logger.BeginScope("Start processing for Id: {id}", 10))
-    {
-        using (logger.BeginScope("Beginning action 1"))
-        {
-            logger.LogInformation("Action 1 done");
-            logger.LogInformation("SubAction 1 done, data retrieved {data}", new { Result = "Ok" });
-        }
-
-        using (logger.BeginScope("Beginning action 2"))
-        {
-            logger.LogInformation("Action 2 done, with status: {Status}", new { Status = "Processed", Duration = TimeSpan.FromSeconds(10) });
-        }
-    }
-
-    return Results.Ok();
-});
 
 app.Run();
